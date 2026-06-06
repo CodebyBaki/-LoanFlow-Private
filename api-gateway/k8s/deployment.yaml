@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: loanflow
+  labels:
+    app: api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: api-gateway:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: NODE_ENV
+              value: "production"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: jwt-secret
+            - name: CUSTOMER_SERVICE_URL
+              value: "http://customer-service:3000"
+            - name: LOAN_SERVICE_URL
+              value: "http://loan-service:3000"
+            - name: CREDIT_SERVICE_URL
+              value: "http://credit-service:3000"
+            - name: DISBURSEMENT_SERVICE_URL
+              value: "http://disbursement-service:3000"
+            - name: PAYMENT_SERVICE_URL
+              value: "http://payment-service:3000"
+            - name: NOTIFICATION_SERVICE_URL
+              value: "http://notification-service:3000"
+            - name: MOCK_BANK_SERVICE_URL
+              value: "http://mock-bank-service:3000"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: loanflow
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
