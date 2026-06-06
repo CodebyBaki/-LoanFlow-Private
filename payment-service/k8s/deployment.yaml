@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: loanflow
+  labels:
+    app: payment-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: payment-service:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: jwt-secret
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: db-host
+            - name: DB_NAME
+              value: "loanflow"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: db-password
+            - name: MOCK_BANK_SERVICE_URL
+              value: "http://mock-bank-service:3000"
+            - name: NOTIFICATION_SERVICE_URL
+              value: "http://notification-service:3000"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: loanflow
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
