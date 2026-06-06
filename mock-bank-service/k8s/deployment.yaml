@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-bank-service
+  namespace: loanflow
+  labels:
+    app: mock-bank-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-bank-service
+  template:
+    metadata:
+      labels:
+        app: mock-bank-service
+    spec:
+      containers:
+        - name: mock-bank-service
+          image: mock-bank-service:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: jwt-secret
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: db-host
+            - name: DB_NAME
+              value: "loanflow"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loanflow-secrets
+                  key: db-password
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-bank-service
+  namespace: loanflow
+spec:
+  selector:
+    app: mock-bank-service
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
