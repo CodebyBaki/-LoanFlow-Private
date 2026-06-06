@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  frontend-web:
+    build: ../../frontend-web
+    ports: ["3000:3000"]
+  api-gateway:
+    build: ../../api-gateway
+    ports: ["8080:3000"]
+  customer-service:
+    build: ../../customer-service
+  loan-service:
+    build: ../../loan-service
+  credit-service:
+    build: ../../credit-service
+  disbursement-service:
+    build: ../../disbursement-service
+  payment-service:
+    build: ../../payment-service
+  notification-service:
+    build: ../../notification-service
+  mock-bank-service:
+    build: ../../mock-bank-service

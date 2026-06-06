@@ -1,0 +1,21 @@
+name: CI – Build & Test
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install & test each service
+        run: |
+          for dir in frontend-web api-gateway customer-service loan-service credit-service disbursement-service payment-service notification-service mock-bank-service; do
+            echo "▶ $dir"
+            cd $dir && npm install && npm test && cd ..
+          done
