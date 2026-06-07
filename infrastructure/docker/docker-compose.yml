@@ -1,22 +1,238 @@
 version: "3.9"
+
+networks:
+  loanflow-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+
 services:
-  frontend-web:
-    build: ../../frontend-web
-    ports: ["3000:3000"]
+
+  # ── Database ────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: loanflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       loanflow
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - loanflow-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: loanflow-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@loanflow.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - loanflow-net
+    depends_on:
+      - postgres
+
+  # ── Services ────────────────────────────────────────────────────────────────
   api-gateway:
-    build: ../../api-gateway
-    ports: ["8080:3000"]
+    build:
+      context: ../../api-gateway
+      dockerfile: Dockerfile
+    container_name: loanflow-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT:                    8080
+      NODE_ENV:                development
+      JWT_SECRET:              loanflow-dev-secret-change-in-production
+      CUSTOMER_SERVICE_URL:    http://customer-service:3000
+      LOAN_SERVICE_URL:        http://loan-service:3000
+      CREDIT_SERVICE_URL:      http://credit-service:3000
+      DISBURSEMENT_SERVICE_URL: http://disbursement-service:3000
+      PAYMENT_SERVICE_URL:     http://payment-service:3000
+      NOTIFICATION_SERVICE_URL: http://notification-service:3000
+      MOCK_BANK_SERVICE_URL:   http://mock-bank-service:3000
+    networks:
+      - loanflow-net
+    depends_on:
+      - customer-service
+      - loan-service
+
   customer-service:
-    build: ../../customer-service
+    build:
+      context: ../../customer-service
+      dockerfile: Dockerfile
+    container_name: loanflow-customer-service
+    restart: unless-stopped
+    environment:
+      PORT:        3000
+      NODE_ENV:    development
+      JWT_SECRET:  loanflow-dev-secret-change-in-production
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     loanflow
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   loan-service:
-    build: ../../loan-service
+    build:
+      context: ../../loan-service
+      dockerfile: Dockerfile
+    container_name: loanflow-loan-service
+    restart: unless-stopped
+    environment:
+      PORT:        3000
+      NODE_ENV:    development
+      JWT_SECRET:  loanflow-dev-secret-change-in-production
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     loanflow
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   credit-service:
-    build: ../../credit-service
+    build:
+      context: ../../credit-service
+      dockerfile: Dockerfile
+    container_name: loanflow-credit-service
+    restart: unless-stopped
+    environment:
+      PORT:        3000
+      NODE_ENV:    development
+      JWT_SECRET:  loanflow-dev-secret-change-in-production
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     loanflow
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   disbursement-service:
-    build: ../../disbursement-service
+    build:
+      context: ../../disbursement-service
+      dockerfile: Dockerfile
+    container_name: loanflow-disbursement-service
+    restart: unless-stopped
+    environment:
+      PORT:                    3000
+      NODE_ENV:                development
+      JWT_SECRET:              loanflow-dev-secret-change-in-production
+      DB_HOST:                 postgres
+      DB_PORT:                 5432
+      DB_NAME:                 loanflow
+      DB_USER:                 postgres
+      DB_PASSWORD:             postgres
+      MOCK_BANK_SERVICE_URL:   http://mock-bank-service:3000
+      NOTIFICATION_SERVICE_URL: http://notification-service:3000
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   payment-service:
-    build: ../../payment-service
+    build:
+      context: ../../payment-service
+      dockerfile: Dockerfile
+    container_name: loanflow-payment-service
+    restart: unless-stopped
+    environment:
+      PORT:                    3000
+      NODE_ENV:                development
+      JWT_SECRET:              loanflow-dev-secret-change-in-production
+      DB_HOST:                 postgres
+      DB_PORT:                 5432
+      DB_NAME:                 loanflow
+      DB_USER:                 postgres
+      DB_PASSWORD:             postgres
+      MOCK_BANK_SERVICE_URL:   http://mock-bank-service:3000
+      NOTIFICATION_SERVICE_URL: http://notification-service:3000
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   notification-service:
-    build: ../../notification-service
+    build:
+      context: ../../notification-service
+      dockerfile: Dockerfile
+    container_name: loanflow-notification-service
+    restart: unless-stopped
+    environment:
+      PORT:        3000
+      NODE_ENV:    development
+      JWT_SECRET:  loanflow-dev-secret-change-in-production
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     loanflow
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   mock-bank-service:
-    build: ../../mock-bank-service
+    build:
+      context: ../../mock-bank-service
+      dockerfile: Dockerfile
+    container_name: loanflow-mock-bank-service
+    restart: unless-stopped
+    environment:
+      PORT:        3000
+      NODE_ENV:    development
+      JWT_SECRET:  loanflow-dev-secret-change-in-production
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     loanflow
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+    networks:
+      - loanflow-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend-web:
+    build:
+      context: ../../frontend-web
+      dockerfile: Dockerfile
+    container_name: loanflow-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - loanflow-net
+    depends_on:
+      - api-gateway

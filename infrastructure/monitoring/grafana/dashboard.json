@@ -1,0 +1,30 @@
+{
+  "title": "LoanFlow – Microservices Overview",
+  "panels": [
+    {
+      "title": "API Gateway – Request Rate",
+      "type": "graph",
+      "targets": [{ "expr": "rate(http_requests_total{service='api-gateway'}[5m])" }]
+    },
+    {
+      "title": "Loan Service – Request Rate",
+      "type": "graph",
+      "targets": [{ "expr": "rate(http_requests_total{service='loan-service'}[5m])" }]
+    },
+    {
+      "title": "Payment Service – Request Rate",
+      "type": "graph",
+      "targets": [{ "expr": "rate(http_requests_total{service='payment-service'}[5m])" }]
+    },
+    {
+      "title": "Pod CPU Usage",
+      "type": "graph",
+      "targets": [{ "expr": "sum(rate(container_cpu_usage_seconds_total{namespace='loanflow'}[5m])) by (pod)" }]
+    },
+    {
+      "title": "Pod Memory Usage",
+      "type": "graph",
+      "targets": [{ "expr": "sum(container_memory_usage_bytes{namespace='loanflow'}) by (pod)" }]
+    }
+  ]
+}

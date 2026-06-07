@@ -1,0 +1,62 @@
+name: Deploy – Azure AKS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AZURE_RESOURCE_GROUP: loanflow-rg
+  AKS_CLUSTER:          loanflow-aks
+  ACR_REGISTRY:         loanflowacr.azurecr.io
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Azure Container Registry
+        run: az acr login --name loanflowacr
+
+      - name: Build, tag and push images to ACR
+        run: |
+          SERVICES="api-gateway customer-service loan-service credit-service disbursement-service payment-service notification-service mock-bank-service frontend-web"
+          for svc in $SERVICES; do
+            echo "🐳 Building $svc"
+            docker build -t $ACR_REGISTRY/$svc:${{ github.sha }} ./$svc
+            docker push $ACR_REGISTRY/$svc:${{ github.sha }}
+            docker tag $ACR_REGISTRY/$svc:${{ github.sha }} $ACR_REGISTRY/$svc:latest
+            docker push $ACR_REGISTRY/$svc:latest
+          done
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.AZURE_RESOURCE_GROUP }}
+          cluster-name:   ${{ env.AKS_CLUSTER }}
+
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -f infrastructure/kubernetes/namespaces.yaml
+          kubectl apply -f infrastructure/kubernetes/configmaps/
+          kubectl apply -f infrastructure/kubernetes/deployments/
+          kubectl apply -f infrastructure/kubernetes/services/
+          kubectl apply -f infrastructure/kubernetes/hpa/
+          kubectl apply -f infrastructure/kubernetes/ingress/
+
+          # Update images with new SHA
+          SERVICES="api-gateway customer-service loan-service credit-service disbursement-service payment-service notification-service mock-bank-service frontend-web"
+          for svc in $SERVICES; do
+            kubectl set image deployment/$svc $svc=$ACR_REGISTRY/$svc:${{ github.sha }} -n loanflow
+          done
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/api-gateway  -n loanflow
+          kubectl rollout status deployment/loan-service -n loanflow
+          kubectl rollout status deployment/frontend-web -n loanflow

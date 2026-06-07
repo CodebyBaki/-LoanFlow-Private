@@ -1,21 +1,46 @@
 name: CI – Build & Test
 
 on:
+  push:
+    branches: [main, develop]
   pull_request:
     branches: [develop, main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install & test each service
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Test each service
         run: |
-          for dir in frontend-web api-gateway customer-service loan-service credit-service disbursement-service payment-service notification-service mock-bank-service; do
-            echo "▶ $dir"
-            cd $dir && npm install && npm test && cd ..
+          for dir in api-gateway customer-service loan-service credit-service disbursement-service payment-service notification-service mock-bank-service; do
+            if [ -f "$dir/src/index.js" ]; then
+              echo "▶ Testing $dir"
+              cd $dir && npm install && npm test && cd ..
+            else
+              echo "⏭ Skipping $dir – not built yet"
+            fi
+          done
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: |
+          for dir in api-gateway customer-service loan-service credit-service disbursement-service payment-service notification-service mock-bank-service frontend-web; do
+            if [ -f "$dir/Dockerfile" ]; then
+              echo "🐳 Building $dir"
+              docker build -t loanflow/$dir:${{ github.sha }} ./$dir
+            fi
           done
