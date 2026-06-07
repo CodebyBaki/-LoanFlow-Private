@@ -231,7 +231,7 @@ services:
     container_name: loanflow-frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "4000:80"
     networks:
       - loanflow-net
     depends_on:
