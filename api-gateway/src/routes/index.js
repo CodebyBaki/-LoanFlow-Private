@@ -1,7 +1,6 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const SERVICES = {
-  AUTH:         process.env.AUTH_SERVICE_URL         || 'http://customer-service:3000',
   CUSTOMER:     process.env.CUSTOMER_SERVICE_URL     || 'http://customer-service:3000',
   LOAN:         process.env.LOAN_SERVICE_URL         || 'http://loan-service:3000',
   CREDIT:       process.env.CREDIT_SERVICE_URL       || 'http://credit-service:3000',
@@ -11,11 +10,10 @@ const SERVICES = {
   MOCK_BANK:    process.env.MOCK_BANK_SERVICE_URL    || 'http://mock-bank-service:3000',
 };
 
-const proxy = (target, pathRewrite) =>
+const proxy = (target) =>
   createProxyMiddleware({
     target,
     changeOrigin: true,
-    pathRewrite,
     on: {
       error: (err, req, res) => {
         console.error(`[PROXY ERROR] ${err.message}`);
@@ -25,12 +23,11 @@ const proxy = (target, pathRewrite) =>
   });
 
 module.exports = {
-  auth:         proxy(SERVICES.AUTH,         { '^/api/auth':          '/api/auth' }),
-  customer:     proxy(SERVICES.CUSTOMER,     { '^/api/customers':     '/api/customers' }),
-  loan:         proxy(SERVICES.LOAN,         { '^/api/loans':         '/api/loans' }),
-  credit:       proxy(SERVICES.CREDIT,       { '^/api/credit':        '/api/credit' }),
-  disbursement: proxy(SERVICES.DISBURSEMENT, { '^/api/disbursements': '/api/disbursements' }),
-  payment:      proxy(SERVICES.PAYMENT,      { '^/api/payments':      '/api/payments' }),
-  notification: proxy(SERVICES.NOTIFICATION, { '^/api/notifications': '/api/notifications' }),
-  mockBank:     proxy(SERVICES.MOCK_BANK,    { '^/api/mock-bank':     '/api/mock-bank' }),
+  customer:     proxy(SERVICES.CUSTOMER),
+  loan:         proxy(SERVICES.LOAN),
+  credit:       proxy(SERVICES.CREDIT),
+  disbursement: proxy(SERVICES.DISBURSEMENT),
+  payment:      proxy(SERVICES.PAYMENT),
+  notification: proxy(SERVICES.NOTIFICATION),
+  mockBank:     proxy(SERVICES.MOCK_BANK),
 };
