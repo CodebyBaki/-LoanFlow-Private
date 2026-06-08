@@ -94,3 +94,20 @@ p { color: #8899BB; }
 
 /* Links */
 a { color: #F0F4FF; }
+
+/* ── Force heading visibility ─────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+h1 *, h2 *, h3 *,
+.font-display,
+[class*="font-display"] {
+  color: #F0F4FF !important;
+  -webkit-text-fill-color: #F0F4FF !important;
+}
+
+/* Gold gradient text exception */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #F5B938, #FFD980) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
