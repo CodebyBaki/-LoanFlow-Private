@@ -12,6 +12,63 @@ const PORT = process.env.PORT || 8080;
 // Prometheus metrics
 client.collectDefaultMetrics();
 
+const httpRequestsTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code']
+});
+
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.1, 0.3, 0.5, 1, 2, 5]
+});
+
+const httpErrorsTotal = new client.Counter({
+  name: 'http_errors_total',
+  help: 'Total HTTP errors',
+  labelNames: ['method', 'route', 'status_code']
+});
+
+
+app.use((req, res, next) => {
+  if (req.path === '/metrics') {
+    return next();
+  }
+
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+
+    httpRequestsTotal.inc({
+      method: req.method,
+      route: req.route?.path || req.path,
+      status_code: res.statusCode
+    });
+
+    httpRequestDuration.observe(
+      {
+        method: req.method,
+        route: req.route?.path || req.path,
+        status_code: res.statusCode
+      },
+      duration
+    );
+
+    if (res.statusCode >= 400) {
+      httpErrorsTotal.inc({
+        method: req.method,
+        route: req.route?.path || req.path,
+        status_code: res.statusCode
+      });
+    }
+  });
+
+  next();
+});
+
 app.get('/metrics', async (req, res) => {
   try {
     res.set('Content-Type', client.register.contentType);
