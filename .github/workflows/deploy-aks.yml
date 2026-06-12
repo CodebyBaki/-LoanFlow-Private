@@ -7,7 +7,7 @@ on:
 env:
   AZURE_RESOURCE_GROUP: loanflow-rg
   AKS_CLUSTER:          loanflow-aks
-  ACR_REGISTRY:         loanflowacr.azurecr.io
+  ACR_REGISTRY:         loanflowacr06658.azurecr.io
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Login to Azure Container Registry
-        run: az acr login --name loanflowacr
+        run: az acr login --name loanflowacr06658
 
       - name: Build, tag and push images to ACR
         run: |
