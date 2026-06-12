@@ -3,7 +3,7 @@ const notificationController = require('../controllers/notification.controller')
 const { authenticate, authorize } = require('../middleware/auth');
 
 // Internal service route (called by other services)
-router.post('/send', authenticate, notificationController.send);
+router.post('/send',  notificationController.send);
 
 // Customer routes
 router.get('/mine', authenticate, notificationController.getMyNotifications);

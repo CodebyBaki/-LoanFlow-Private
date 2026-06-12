@@ -4,9 +4,9 @@ const { authenticate } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validate');
 
 // Internal service routes (called by disbursement and payment services)
-router.post('/transfer',       authenticate, validate(schemas.transfer), bankController.transfer);
-router.post('/debit',          authenticate, validate(schemas.debit),    bankController.debit);
-router.post('/verify-account', authenticate, validate(schemas.verify),   bankController.verifyAccount);
+router.post('/transfer',       validate(schemas.transfer), bankController.transfer);
+router.post('/debit',          validate(schemas.debit),    bankController.debit);
+router.post('/verify-account', validate(schemas.verify),   bankController.verifyAccount);
 
 // Admin / testing routes
 router.get('/accounts',                    authenticate, bankController.getAccounts);

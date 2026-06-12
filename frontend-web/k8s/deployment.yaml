@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-web
+  namespace: loanflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend-web
+  template:
+    metadata:
+      labels:
+        app: frontend-web
+    spec:
+      containers:
+      - name: frontend-web
+        image: loanflowacr06658.azurecr.io/loanflow/frontend-web:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-web
+  namespace: loanflow
+spec:
+  selector:
+    app: frontend-web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer

@@ -111,3 +111,50 @@ h1 *, h2 *, h3 *,
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE FIXES
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  /* Dashboard layout */
+  aside {
+    width: 100% !important;
+    min-height: auto !important;
+  }
+
+  /* Tables */
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Cards */
+  .card,
+  .stat-card {
+    padding: 16px !important;
+  }
+
+  /* Buttons */
+  .btn-gold,
+  .btn-ghost {
+    width: 100%;
+  }
+
+  /* Typography */
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  /* General spacing */
+  body {
+    overflow-x: hidden;
+  }
+}
+
