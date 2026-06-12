@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: mock-bank-service
-          image: mock-bank-service:latest
+          image: loanflowacr06658.azurecr.io/loanflow/mock-bank-service:latest
           ports:
             - containerPort: 3000
           env:

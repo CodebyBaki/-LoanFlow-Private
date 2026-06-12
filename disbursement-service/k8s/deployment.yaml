@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: disbursement-service
-          image: disbursement-service:latest
+          image: loanflowacr06658.azurecr.io/loanflow/disbursement-service:latest
           ports:
             - containerPort: 3000
           env:

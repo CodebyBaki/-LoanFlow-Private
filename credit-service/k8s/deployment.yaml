@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: credit-service
-          image: credit-service:latest
+          image: loanflowacr06658.azurecr.io/loanflow/credit-service:latest
           ports:
             - containerPort: 3000
           env:

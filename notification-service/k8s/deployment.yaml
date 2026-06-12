@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: notification-service:latest
+          image: loanflowacr06658.azurecr.io/loanflow/notification-service:latest
           ports:
             - containerPort: 3000
           env:

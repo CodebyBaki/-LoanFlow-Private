@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: customer-service
-          image: customer-service:latest
+          image: loanflowacr06658.azurecr.io/loanflow/customer-service:latest
           ports:
             - containerPort: 3000
           env:
