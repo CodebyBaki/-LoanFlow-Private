@@ -4,9 +4,22 @@ const rateLimit = require('express-rate-limit');
 const { authenticate } = require('./middleware/auth');
 const routes = require('./routes');
 require('dotenv').config();
+const client = require('prom-client');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// Prometheus metrics
+client.collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
 
 app.use(morgan('combined'));
 
